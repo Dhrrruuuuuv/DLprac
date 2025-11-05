@@ -1,0 +1,54 @@
+#Step 1: Import Libraries
+import numpy as np
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Embedding, Lambda, Dense
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.utils import to_categorical
+import tensorflow.keras.backend as K
+
+#Step 2: Text Data
+text = "I love playing cricket and watching cricket matches"
+# Tokenizer: convert words into numbers
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts([text])
+word2idx = tokenizer.word_index
+vocab_size = len(word2idx) + 1
+seq = tokenizer.texts_to_sequences([text])
+
+#Step 3: Create Context–Target Pairs
+pairs = []
+window = 2  # context words around target word
+for i, target in enumerate(seq[0]):
+    for j in range(max(0, i - window), min(len(seq[0]), i + window + 1)):
+        if i != j:
+            pairs.append((seq[0][j], target))
+contexts = np.array([x[0] for x in pairs])
+targets = np.array([x[1] for x in pairs])
+targets = to_categorical(targets, vocab_size)  # one-hot encode targets
+
+#Step 4: Create CBOW Model
+from keras.models import Model
+from keras.layers import Input, Embedding, Dense, GlobalAveragePooling1D
+input_layer = Input(shape=(1,))
+embedding_layer = Embedding(vocab_size, 8, name="embedding")(input_layer)
+x = GlobalAveragePooling1D()(embedding_layer)     # ✅ replaces Lambda
+output_layer = Dense(vocab_size, activation='softmax')(x)
+model = Model(inputs=input_layer, outputs=output_layer)
+model.compile(optimizer='adam', loss='categorical_crossentropy')
+model.summary()
+
+#Step 5: Train Model
+model.fit(contexts, targets, epochs=10)
+
+#Step 6: Predict a Word
+test_word = "playing"
+test_idx = np.array([[word2idx[test_word]]])
+pred = model.predict(test_idx)
+predicted_idx = np.argmax(pred)
+for w, i in word2idx.items():
+    if i == predicted_idx:
+        predicted_word = w
+        break
+print(f"Context word: '{test_word}'")
+print(f"Predicted target word: '{predicted_word}'")
+
