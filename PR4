@@ -1,0 +1,58 @@
+# Import Required Libraries
+import numpy as np
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense
+
+#Step 1: Create Synthetic Data
+# Normal data (mean=0, std=1)
+normal_data = np.random.normal(0, 1, (1000, 10))
+# Anomaly data (mean=5, std=1)
+anomaly_data = np.random.normal(5, 1, (250, 10))
+# Combine both into one dataset
+data = np.vstack([normal_data, anomaly_data])
+labels = np.hstack([np.zeros(1000), np.ones(250)])        # 0 = normal, 1 = anomaly
+
+#Step 2: Split into Training and Testing Sets
+x_train, x_test, y_train, y_test = train_test_split(
+    data, labels, test_size=0.3, random_state=42
+)
+
+#Step 3: Define Autoencoder Architecture
+input_dim = x_train.shape[1]   # number of features = 10
+encoding_dim = 3               # compressed latent dimension
+# Input Layer
+input_layer = Input(shape=(input_dim,))
+# Encoder Layer
+encoder_layer = Dense(encoding_dim, activation='relu')(input_layer)
+# Decoder Layer
+decoder_layer = Dense(input_dim, activation='linear')(encoder_layer)
+# Build the Autoencoder Model
+autoencoder = Model(input_layer, decoder_layer)
+autoencoder.compile(optimizer='adam', loss='mse')
+
+#Step 4: Train Autoencoder (Only on Normal Data)
+autoencoder.fit(
+    x_train[y_train == 0],
+    x_train[y_train == 0],
+    epochs=10
+)
+
+#Step 5: Predict and Detect Anomalies
+x_pred = autoencoder.predict(x_test)
+mse = np.mean((x_test - x_pred) ** 2, axis=1)
+
+#Step 6: Calculate Dynamic Threshold using traning normal data
+x_train_pred = autoencoder.predict(x_train[y_train == 0])
+mse_train = np.mean((x_train[y_train == 0] - x_train_pred) ** 2, axis=1)
+threshold = np.mean(mse_train) + 3 * np.std(mse_train)   # Dynamic threshold
+
+#Step 7: Predict Anomalies Using Dynamic Threshold
+y_pred = (mse > threshold).astype(int)   # 1 = anomaly, 0 = normal
+
+#Step 8: Display results
+print("Calculated Threshold:", threshold)
+print("True labels (first 20):", y_test[:20])
+print("Predicted labels (first 20):", y_pred[:20])
+print("MSE (first 20 samples):", mse[:20])
+
