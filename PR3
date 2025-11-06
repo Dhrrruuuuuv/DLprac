@@ -1,3 +1,9 @@
+Build the Image classification model by dividing the model into following 4 stages: 
+1. Loading and preprocessing the image data 
+2. Defining the model's architecture 
+3. Training the model 
+4. Estimating the model's performance 
+
 #Importing libraries
 import numpy as np
 import matplotlib.pyplot as plt
