@@ -1,3 +1,10 @@
+Title: Implement the Continuous Bag of Words (CBOW) Model 
+Aim: Implement the Continuous Bag of Words (CBOW) Model. Stages can be: 
+a. Data preparation 
+b. Generate training data 
+c. Train model 
+d. Output 
+
 #Step 1: Import Libraries
 import numpy as np
 from tensorflow.keras.models import Model
