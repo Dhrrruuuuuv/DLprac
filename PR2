@@ -1,3 +1,11 @@
+Implementing Feed forward Neural Network with Keras and Tensorflow. 
+1. Import the necessary packages 
+2. Load the training and testing data(MNIST) 
+3. Define the network architecture using keras 
+4. Train the model using SGD 
+5. Evaluate the network 
+6. Plot the training loss and accuracy
+
 #importing necessary libraries
 import tensorflow as tf
 from tensorflow import keras
